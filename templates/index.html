@@ -72,7 +72,7 @@ var yValue, // data -> value
     yAxis;
 
 
-d3.text('static/data_example.csv', function(text) {  // NEW
+d3.text('static/test_pca.csv', function(text) {  // NEW
   data = d3.csv.parseRows(text).map(function(row) {
     return row.map(function(value) {
       return +value;
@@ -80,11 +80,11 @@ d3.text('static/data_example.csv', function(text) {  // NEW
   });
   });                                                // NEW
 
-d3.text('static/label_example.csv', function(text) {  // NEW
+d3.text('static/test_label.csv', function(text) {  // NEW
   label = d3.csv.parseRows(text);
   });                                                
 
-d3.text('static/img_example.csv', function(text) {  // NEW
+d3.text('static/test_img.csv', function(text) {  // NEW
   img_file = d3.csv.parseRows(text);
   });
                                  
@@ -131,7 +131,7 @@ toggle_button.on("click", function(d) {
 			d3.selectAll('.legend').style("opacity",0);
 			var pics = d3.selectAll('.pic')[0].length;
 			if(pics){
-				d3.selectAll('.pic').style("opacity",1);
+				d3.selectAll('.pic').style("visibility", "visible");
 			}
 			else{
 			draw_picture_points(svg);	
@@ -141,7 +141,7 @@ toggle_button.on("click", function(d) {
 			mode = false;}
 		else{
 			d3.selectAll(".dot").style("opacity",1);
-			d3.selectAll(".pic").style("opacity",0);
+			d3.selectAll(".pic").style("visibility", "hidden");
 			d3.selectAll('.legend').style("opacity",1);
 			mode = true;
 			d3.select(this).text("single mode");
@@ -166,7 +166,7 @@ toggle_button.on("click", function(d) {
 function draw_picture_points(svg){
 //	<image xlink:href="firefox.jpg" x="0" y="0" height="50px" width="50px"/>
 
-	  svg.selectAll(".pic")
+      svg.selectAll(".pic")
       .data(final_data)
       .enter().append("image")
       .attr("xlink:href",img_loc)
@@ -202,7 +202,7 @@ function draw_normal_points(svg){
       .on("mouseover", function(d) {
           tooltip.transition()
                .duration(200)
-               .style("opacity", .9);
+               .style("opacity",1);
           var html_str = "<img src=static/"+d.loc+" height=42 width=42>";
           tooltip.html(html_str)
                .style("left", (d3.event.pageX + 5) + "px")
