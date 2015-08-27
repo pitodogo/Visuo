@@ -23,12 +23,14 @@ body {
   stroke: #000;
 }
 
-.tooltip {
+
+.tooltip, .ctip {
   position: absolute;
   width: 200px;
   height: 28px;
   pointer-events: none;
 }
+
 </style>
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -43,12 +45,12 @@ var w = window,
     width = win_x - margin.left - margin.right,
     height = win_y - 50 - margin.top - margin.bottom;
 
-var mode = true;
+var mode = 1;
 var data;
 var label;
 var img_file;
 var final_data;
-
+var tooltip;
 var domain_x_min = 100000, domain_x_max = -100000;
 var domain_y_min = 100000, domain_y_max = -100000;
 
@@ -72,7 +74,7 @@ var yValue, // data -> value
     yAxis;
 
 
-d3.text('static/test_pca.csv', function(text) {  // NEW
+d3.text('static/data_example.csv', function(text) {  // NEW
   data = d3.csv.parseRows(text).map(function(row) {
     return row.map(function(value) {
       return +value;
@@ -80,11 +82,11 @@ d3.text('static/test_pca.csv', function(text) {  // NEW
   });
   });                                                // NEW
 
-d3.text('static/test_label.csv', function(text) {  // NEW
+d3.text('static/label_example.csv', function(text) {  // NEW
   label = d3.csv.parseRows(text);
   });                                                
 
-d3.text('static/test_img.csv', function(text) {  // NEW
+d3.text('static/img_example.csv', function(text) {  // NEW
   img_file = d3.csv.parseRows(text);
   });
                                  
@@ -126,27 +128,93 @@ var svg = d3.select("body").append("svg")
 var toggle_button = d3.select('body').append('div').attr("class","label").text("single mode");
 toggle_button.on("click", function(d) {
 	var svg = d3.select("svg");
-		if(mode){
-			d3.selectAll(".dot").style("opacity",0);
-			d3.selectAll('.legend').style("opacity",0);
-			var pics = d3.selectAll('.pic')[0].length;
-			if(pics){
-				d3.selectAll('.pic').style("visibility", "visible");
-			}
-			else{
-			draw_picture_points(svg);	
-			}
+		if(mode==1){
+		
+      svg.selectAll(".dot")
+      .on("mouseover", null)
+      .on("mouseout",null);
+			d3.select(this).text("single click mode");
+			
+      svg.selectAll(".dot")
+      .on("click",function(){
+      var my_class = this.__data__['loc'][0].slice(0,-4).split('/').join('');
+      var img_loc = this.__data__['loc'][0];
+      var select_string = "div."+my_class;
+      var select_obj = d3.select(select_string)[0][0];
 
-			d3.select(this).text("all mode");
-			mode = false;}
-		else{
-			d3.selectAll(".dot").style("opacity",1);
-			d3.selectAll(".pic").style("visibility", "hidden");
-			d3.selectAll('.legend').style("opacity",1);
-			mode = true;
-			d3.select(this).text("single mode");
+
+        if(select_obj){
+
+            if(d3.select(select_string).style("visibility")=="visible"){
+                d3.select(select_string).style("visibility","hidden");
+            }
+              else{
+                d3.select(select_string).style("visibility","visible");
+              }
+            }
+        else{
+            var n = d3.select("body").append("div").attr("class",my_class+" ctip");
+;
+          
+              var html_str = "<img src=static/"+img_loc+" height=42 width=42>";
+              n.html(html_str)
+               .style("left", (d3.event.pageX + 5) + "px")
+               .style("top", (d3.event.pageY - 28) + "px")
+              .transition()
+              .duration(200);
+             }
+
+        
+            
+ 
+      });
+
+
+      mode = 2;
+      }
+		else if(mode==2){
+      d3.selectAll(".ctip").style("visibility","hidden");
+      d3.selectAll(".dot").on("click",null);
+      d3.selectAll(".dot").style("opacity",0);
+      d3.selectAll('.legend').style("opacity",0);
+      var pics = d3.selectAll('.pic')[0].length;
+      if(pics){
+        d3.selectAll('.pic').style("visibility", "visible");
+      }
+      else{
+      draw_picture_points(svg); 
+      }
+
+      d3.select(this).text("all mode");
+      mode=3;
 		}
+
+    else if(mode==3){
+      d3.selectAll(".dot").style("opacity",1);
+      d3.selectAll(".pic").style("visibility", "hidden");
+      d3.selectAll('.legend').style("opacity",1);
+      mode = 1;
+      d3.select(this).text("single mode");
+
+      svg.selectAll(".dot")
+      .on("mouseover", function(d) {
+          tooltip.transition()
+               .duration(200)
+               .style("opacity",1);
+          var html_str = "<img src=static/"+d.loc+" height=42 width=42>";
+          tooltip.html(html_str)
+               .style("left", (d3.event.pageX + 5) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
       })
+      .on("mouseout", function(d) {
+          tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+      });
+
+    }
+      
+    });
 
 
 
@@ -158,7 +226,6 @@ toggle_button.on("click", function(d) {
 
 
   },500);
-
 
  }, 1000);
 	
@@ -216,7 +283,7 @@ function draw_normal_points(svg){
 
 // add the tooltip area to the webpage
 
-var tooltip = d3.select("body").append("div")
+   tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
   // x-axis
